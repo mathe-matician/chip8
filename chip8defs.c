@@ -75,6 +75,7 @@ uint16_t Decode(uint16_t a_opcode) {
     return l_opcode;
 }
 
+//TODO: change memory to 16bit address
 void emulateCycleImp(CHIP8_t* a_chip8) {
     //fetch
     uint8_t l_msb = a_chip8->memory[a_chip8->pc];
@@ -107,7 +108,7 @@ void loadProgramImp(CHIP8_t* a_chip8, char* a_program) {
 }
 
 void setKeysImp(CHIP8_t* a_chip8) {
-    printf("Storing key press state\n");
+    //printf("Storing key press state\n");
 }
 
 struct stack* push(uint16_t a_address) {

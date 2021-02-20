@@ -194,7 +194,6 @@ void SUB(CHIP8_t* a_chip8) {
     a_chip8->V[Get_0x00(a_chip8->opcode)] -= a_chip8->V[Get_00x0(a_chip8->opcode)];
 }
 
-//TODO: look at this implementation, some people say Vx = Vy >> 1, while others say Vx = Vy = Vy >> 1
 //SHR Vx, {, Vy} 8xy6
 //Set Vx = Vx SHR 1.
 //If the least-significant bit of Vx is 1, then VF is set to 1, otherwise 0. Then Vx is divided by 2.
@@ -219,14 +218,17 @@ void SUBN(CHIP8_t* a_chip8) {
     a_chip8->V[Get_00x0(a_chip8->opcode)] -= a_chip8->V[Get_0x00(a_chip8->opcode)];
 }
 
-//TODO: similar to 8xy6 question
 //SHL Vx, {, Vy} 8xyE
 //Set Vx = Vx SHL 1.
 //If the most-significant bit of Vx is 1, then VF is set to 1, otherwise to 0. Then Vx is multiplied by 2.
 void SHL(CHIP8_t* a_chip8) {
-    if ((a_chip8->V[Get_0x00(a_chip8->opcode)] & 0x10) == 0x10) {
-
+    if (((a_chip8->V[Get_0x00(a_chip8->opcode)] & 0xF0) & 0x01) == 0x01) {
+        a_chip8->V[0x0F] = 0x01;
+    } else {
+        a_chip8->V[0x0F] = 0;
     }
+
+    a_chip8->V[Get_0x00(a_chip8->opcode)] = a_chip8->V[Get_0x00(a_chip8->opcode)] << 1;
 }
 
 //LD Vx, Vy 8xy0
@@ -254,7 +256,11 @@ void SKNP(CHIP8_t* a_chip8) {
 //Read registers V0 through Vx from memory starting at location I.
 //The interpreter reads values from memory starting at location I into registers V0 through Vx.
 void LD_Fx65_I(CHIP8_t* a_chip8) {
-    printf("LD_Fx65_I");
+    int l_endRegister = Get_0x00(a_chip8->opcode);
+    for (int i = 0; i != l_endRegister; i++) {
+        //a_chip8->memory[]
+        printf("LD\n");
+    }
 }
 
 //LD [I], Vx Fx55
@@ -308,9 +314,7 @@ void RET(CHIP8_t* a_chip8) {
 }
 
 //to call: (*opcode_execute[index])()
-//index could match up with what it is in the hash table to make it faster
 void (*opcode_execute[OPCODE_SIZE])() = {
-    //func1, func2, func3
     SYS, JP_1nnn, CALL, SE_3xkk, SNE, SE_5xy0, LD_6xkk, ADD_7xkk,
     LD_I_Annn, JP_V0_Bnnn, RND, DRW, OR, AND, XOR, ADD_8xy4,
     SUB, SHR, SUBN, SHL, LD_8xy0, SKP, SKNP, LD_Fx65_I,
