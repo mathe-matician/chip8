@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <errno.h>
 #define OPCODE_SIZE 35
-#define MEMORY_SIZE 4096
+#define MEMORY_SIZE 0x0FFF
 #define REG_SIZE 16
 #define SCREEN_HEIGHT 64
 #define SCREEN_WIDTH 32
