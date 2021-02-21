@@ -1,7 +1,6 @@
 #include "chip8.h"
 #include <stdlib.h>
 #include "SDL2/SDL.h"
-#include "SDLdefs.h"
 
 CHIP8_t Chip8;
 SDL_Window* g_Window = NULL;
@@ -9,7 +8,18 @@ SDL_Renderer *g_renderer = NULL;
 SDL_Surface *g_surface = NULL;
 SDL_Texture *g_texture = NULL;
 SDL_Event g_event;
- 
+SDL_Rect g_rect, g_area;
+const uint8_t *state;
+void GameLoop();
+int initSDL();
+void CleanUpSDL();
+void DrawPixel(SDL_Renderer* a_renderer);
+void GoRight(SDL_Renderer* a_renderer);
+void GoLeft(SDL_Renderer* a_renderer);
+void GoUp(SDL_Renderer* a_renderer);
+void GoDown(SDL_Renderer* a_renderer);
+void HandleInput();
+
 int main(int argc, char **argv) 
 {
   if (initSDL()) {
@@ -45,11 +55,14 @@ void GameLoop() {
 		  }
 	  }
 
+    HandleInput();
+
     SDL_Delay(16);
     if(!(Chip8.V[15] & 0)) {
-      DrawPixel(g_renderer);
-      SDL_UpdateWindowSurface(g_Window);
+      //DrawPixel(g_renderer);
     }
+
+    SDL_UpdateWindowSurface(g_Window);
  
     Chip8.SetKeys(&Chip8);	
   }
@@ -78,23 +91,72 @@ int initSDL() {
   SDL_RenderClear(g_renderer);
   SDL_ShowWindow(g_Window);
 
+  g_rect.w = 8;
+  g_rect.h = 8;
+  g_rect.x = 0;
+  g_rect.y = 0;
+
   return 0;
 }
 
 void DrawPixel(SDL_Renderer* a_renderer) {
-    SDL_Rect l_rect, l_area;
-
-    SDL_RenderGetViewport(g_renderer, &l_area);
+    SDL_RenderGetViewport(g_renderer, &g_area);
     SDL_SetRenderDrawColor(a_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-    l_rect.w = 8;
-    l_rect.h = 8;
-    l_rect.x = l_area.w/2; //x position on screen
-    l_rect.y = l_area.h/2; //y position on screen
-    SDL_RenderFillRect(a_renderer, &l_rect);
+    g_rect.x += 1;
+    g_rect.y += 1;
+    SDL_RenderFillRect(a_renderer, &g_rect);
+}
+
+void GoRight(SDL_Renderer* a_renderer) {
+    SDL_RenderGetViewport(g_renderer, &g_area);
+    SDL_SetRenderDrawColor(a_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+    g_rect.x += 1;
+    SDL_RenderFillRect(a_renderer, &g_rect);
+}
+
+void GoLeft(SDL_Renderer* a_renderer) {
+    SDL_RenderGetViewport(g_renderer, &g_area);
+    SDL_SetRenderDrawColor(a_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+    g_rect.x -= 1;
+    SDL_RenderFillRect(a_renderer, &g_rect);
+}
+
+void GoUp(SDL_Renderer* a_renderer) {
+    SDL_RenderGetViewport(g_renderer, &g_area);
+    SDL_SetRenderDrawColor(a_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+    g_rect.y -= 1;
+    SDL_RenderFillRect(a_renderer, &g_rect);
+}
+
+void GoDown(SDL_Renderer* a_renderer) {
+    SDL_RenderGetViewport(g_renderer, &g_area);
+    SDL_SetRenderDrawColor(a_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+    g_rect.y += 1;
+    SDL_RenderFillRect(a_renderer, &g_rect);
 }
 
 void CleanUpSDL(SDL_Window* a_Window) {
   SDL_DestroyWindow(g_Window);
   SDL_DestroyRenderer(g_renderer);
   SDL_Quit();
+}
+
+void HandleInput() {
+    state = SDL_GetKeyboardState(NULL);
+
+    if (state[SDL_SCANCODE_RIGHT]) {
+      GoRight(g_renderer);
+    }
+
+    if (state[SDL_SCANCODE_LEFT]) {
+      GoLeft(g_renderer);
+    }
+
+    if (state[SDL_SCANCODE_UP]) {
+      GoUp(g_renderer);
+    }
+
+    if (state[SDL_SCANCODE_DOWN]) {
+      GoDown(g_renderer);
+    }
 }
