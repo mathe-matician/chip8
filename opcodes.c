@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include "SDLRect.h"
 
 uint16_t opcodesInit[OPCODE_SIZE] = {
     0x0000, 0x1000, 0x2000, 0x3000, 0x4000, 0x5000, 0x6000, 0x7000,
@@ -23,7 +24,9 @@ uint16_t Get_0xx0(uint16_t a_opcode) {
 
 //AND uint16_t with 0x0F00;
 uint16_t Get_0x00(uint16_t a_opcode) {
-    return a_opcode & 0x0F00;
+    int l_res = a_opcode & 0x0F00;
+    l_res = l_res >> 8;
+    return l_res;
 }
 
 //AND uint16_t with 0x00FF;
@@ -33,7 +36,9 @@ uint16_t Get_00xx(uint16_t a_opcode) {
 
 //AND uint16_t with 0x00F0;
 uint16_t Get_00x0(uint16_t a_opcode) {
-    return a_opcode & 0x00F0;
+    int l_res = a_opcode & 0x00F0;
+    l_res = l_res >> 4;
+    return l_res;
 }
 
 //AND uint16_t with 0x000F;
@@ -137,16 +142,36 @@ void RND(CHIP8_t* a_chip8) {
 void DRW(CHIP8_t* a_chip8) {
     uint8_t l_byte = Get_000x(a_chip8->opcode);
     uint16_t l_memoryLocation = a_chip8->I;
-    uint8_t l_xPosition = Get_0x00(a_chip8->opcode);
-    uint8_t l_yPosition = Get_00x0(a_chip8->opcode);
+    int l_xPosition = Get_0x00(a_chip8->opcode);
+    int l_yPosition = Get_00x0(a_chip8->opcode);
 
     //read n bytes starting at location I
     //XOR Vx,Vy with screen x,y, 
     //if any pixels are erased by this above XOR, run for collision flag:
-    a_chip8->V[0x0F] = 0x01; //TODO: setting VF register, is this all bits on or only certain ones?
-    //if no pixels are erased, set to VF to 0
+    /*
+    if (l_xPosition == g_rect.x || l_yPosition == g_rect.y) {
+        a_chip8->V[0x0F] = 0x01;
+    } else {
+        a_chip8->V[0x0F] = 0;
+    }
+    */
 
-    //if part of sprite is positioned offscreen make it wrap around to the other side.
+    //test for drawing screen location and screen boundaries
+    g_rect.x += l_xPosition;
+    g_rect.y += l_yPosition;
+    if (g_rect.x+1 > SCREEN_WIDTH-1) {
+        g_rect.y+=8;
+        g_rect.x = 0;
+    }
+
+    if (g_rect.y > SCREEN_HEIGHT-1) {
+        g_rect.x+=8;
+        g_rect.y = 0;
+    }
+
+    SDL_RenderGetViewport(g_renderer, &g_area);
+    SDL_SetRenderDrawColor(g_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+    SDL_RenderFillRect(g_renderer, &g_rect);
 }
 
 //OR Vx, Vy 8xy1

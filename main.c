@@ -1,14 +1,9 @@
 #include "chip8.h"
 #include <stdlib.h>
 #include "SDL2/SDL.h"
+#include "SDLRect.h"
 
 CHIP8_t Chip8;
-SDL_Window* g_Window = NULL;
-SDL_Renderer *g_renderer = NULL;
-SDL_Surface *g_surface = NULL;
-SDL_Texture *g_texture = NULL;
-SDL_Event g_event;
-SDL_Rect g_rect, g_area;
 const uint8_t *state;
 void GameLoop();
 int initSDL();
@@ -36,6 +31,8 @@ int main(int argc, char **argv)
   Chip8.init(&Chip8);
   Chip8.LoadProgram(&Chip8, "IBM_logo");
 
+  //Drawing test
+  Chip8.opcode = 0xD110;
   GameLoop();
 
   CleanUpSDL(g_Window);
@@ -56,6 +53,7 @@ void GameLoop() {
 	  }
 
     HandleInput();
+    DRW(&Chip8);
 
     SDL_Delay(16);
     if(!(Chip8.V[15] & 0)) {
@@ -74,7 +72,7 @@ int initSDL() {
     return 3;
   }
 
-  g_Window = SDL_CreateWindow("Chip8 Emulator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 256, 128, SDL_WINDOW_RESIZABLE);
+  g_Window = SDL_CreateWindow("Chip8 Emulator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE);
   g_surface = SDL_GetWindowSurface(g_Window);
   //g_surface = SDL_CreateRGBSurfaceWithFormat(0, 2, 3, 8, SDL_PIXELFORMAT_INDEX8);
     if (g_surface == NULL) {
@@ -110,14 +108,22 @@ void DrawPixel(SDL_Renderer* a_renderer) {
 void GoRight(SDL_Renderer* a_renderer) {
     SDL_RenderGetViewport(g_renderer, &g_area);
     SDL_SetRenderDrawColor(a_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-    g_rect.x += 1;
+    if (g_rect.x + 1 > 255) {
+      g_rect.x = 0;
+    } else {
+      g_rect.x += 1;
+    }
     SDL_RenderFillRect(a_renderer, &g_rect);
 }
 
 void GoLeft(SDL_Renderer* a_renderer) {
     SDL_RenderGetViewport(g_renderer, &g_area);
     SDL_SetRenderDrawColor(a_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-    g_rect.x -= 1;
+    if (g_rect.x - 1 < 0) {
+      g_rect.x = 255;
+    } else {
+      g_rect.x -= 1;
+    }
     SDL_RenderFillRect(a_renderer, &g_rect);
 }
 
@@ -125,13 +131,22 @@ void GoUp(SDL_Renderer* a_renderer) {
     SDL_RenderGetViewport(g_renderer, &g_area);
     SDL_SetRenderDrawColor(a_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
     g_rect.y -= 1;
+    if (g_rect.y - 1 < 0) {
+      g_rect.y = 127;
+    } else {
+      g_rect.y -= 1;
+    }
     SDL_RenderFillRect(a_renderer, &g_rect);
 }
 
 void GoDown(SDL_Renderer* a_renderer) {
     SDL_RenderGetViewport(g_renderer, &g_area);
     SDL_SetRenderDrawColor(a_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-    g_rect.y += 1;
+    if (g_rect.y + 1 > 127) {
+      g_rect.y = 0;
+    } else {
+      g_rect.y += 1;
+    }
     SDL_RenderFillRect(a_renderer, &g_rect);
 }
 

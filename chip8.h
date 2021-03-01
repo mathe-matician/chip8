@@ -6,8 +6,8 @@
 #define OPCODE_SIZE 35
 #define MEMORY_SIZE 0x0FFF
 #define REG_SIZE 16
-#define SCREEN_HEIGHT 64
-#define SCREEN_WIDTH 32
+#define SCREEN_HEIGHT 128
+#define SCREEN_WIDTH 256
 #define ERROR_MSG\
   fprintf(stderr, "Error(%d): %s\nLine: %d\nFile: %s\nC Version: %ld\nDate: %s\n", errno,__func__,__LINE__,__FILE__,__STDC_VERSION__,__DATE__)
 
@@ -22,7 +22,7 @@ extern void (*opcode_execute[OPCODE_SIZE])();
 struct opCode {
     uint16_t opcode;
 };
-//TODO: make stack a linked list - pop, push etc
+
 struct stack {
     uint16_t address;
     struct stack* next;
@@ -65,5 +65,7 @@ extern void init_hash();
 //stack
 extern struct stack* push(uint16_t a_address);
 extern void pop();
+
+extern void DRW(CHIP8_t* a_chip8);
 
 #endif //CHIP8_H
