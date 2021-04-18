@@ -1,6 +1,6 @@
 #ifndef SDLRECT_H
 #define SDLRECT_H
-#include "SDL2/SDL.h"
+#include<SDL2/SDL.h>
 SDL_Rect g_rect;
 SDL_Rect g_area;
 SDL_Window* g_Window;
