@@ -134,44 +134,55 @@ void RND(CHIP8_t* a_chip8) {
 }
 
 //DRW Vx, Vy, nibble Dxyn
-//Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
-//The interpreter reads n bytes from memory, starting at the address stored in I.
-//These bytes are then displayed as sprites on screen at coordinates (Vx, Vy).
-//Sprites are XORed onto the existing screen. If this causes any pixels to be erased, VF is set to 1, otherwise it is set to 0. 
-//If the sprite is positioned so part of it is outside the coordinates of the display, it wraps around to the opposite side of the screen. 
+/*
+    Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels. 
+    Each row of 8 pixels is read as bit-coded 
+    (with the most significant bit of each byte displayed on the left) 
+    starting from memory location I; 
+    I value doesn't change after the execution of this instruction. 
+    As described above, VF is set to 1 if any screen pixels are flipped 
+    from set to unset when the sprite is drawn, and to 0 if that doesn't happen.
+*/
+
 void DRW(CHIP8_t* a_chip8) {
-    uint8_t l_byte = Get_000x(a_chip8->opcode);
+    uint8_t l_how_many_bytes = Get_000x(a_chip8->opcode);
     uint16_t l_memoryLocation = a_chip8->I;
     int l_xPosition = Get_0x00(a_chip8->opcode);
     int l_yPosition = Get_00x0(a_chip8->opcode);
+    printf("how many = %d\n", l_how_many_bytes);
 
     //read n bytes starting at location I
-    //XOR Vx,Vy with screen x,y, 
-    //if any pixels are erased by this above XOR, run for collision flag:
-    /*
-    if (l_xPosition == g_rect.x || l_yPosition == g_rect.y) {
-        a_chip8->V[0x0F] = 0x01;
-    } else {
-        a_chip8->V[0x0F] = 0;
-    }
-    */
+    while ((int*)l_how_many_bytes--) {
+        uint8_t l_mem_byte = a_chip8->memory[l_memoryLocation];
+        
+        //Collision
+        //XOR Vx,Vy with screen x,y, 
+        //if any pixels are erased by this above XOR, run for collision flag:
+        uint32_t *pixels = (uint32_t*)g_surface->pixels;
+        uint32_t data = pixels[(l_yPosition * g_surface->w) + l_xPosition];
 
-    //test for drawing screen location and screen boundaries
-    g_rect.x += l_xPosition;
-    g_rect.y += l_yPosition;
-    if (g_rect.x+1 > SCREEN_WIDTH-1) {
-        g_rect.y+=8;
-        g_rect.x = 0;
-    }
+        //temp collision test
+        if (data) {
+            printf("YOU HIT A PIXEL");
+            a_chip8->V[0x0F] = 0x01;
+        } else {
+            a_chip8->V[0x0F] = 0;
+        }
 
-    if (g_rect.y > SCREEN_HEIGHT-1) {
-        g_rect.x+=8;
-        g_rect.y = 0;
-    }
+        //Figure out drawing location
+        //test for drawing screen location and screen boundaries
+        if (l_xPosition > SCREEN_WIDTH-1) {
+            l_xPosition -= SCREEN_WIDTH+1;
+        }
 
-    SDL_RenderGetViewport(g_renderer, &g_area);
-    SDL_SetRenderDrawColor(g_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-    SDL_RenderFillRect(g_renderer, &g_rect);
+        if (l_yPosition > SCREEN_HEIGHT-1) {
+            l_yPosition -= SCREEN_HEIGHT+1;
+        }
+
+        SDL_SetRenderDrawColor(g_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+        SDL_RenderDrawPoint(g_renderer, l_xPosition, l_yPosition);
+        SDL_RenderPresent(g_renderer);
+    }
 }
 
 //OR Vx, Vy 8xy1

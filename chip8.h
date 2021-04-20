@@ -6,8 +6,8 @@
 #define OPCODE_SIZE 35
 #define MEMORY_SIZE 0x0FFF
 #define REG_SIZE 16
-#define SCREEN_HEIGHT 128
-#define SCREEN_WIDTH 256
+#define SCREEN_HEIGHT 64
+#define SCREEN_WIDTH 128
 #define ERROR_MSG\
   fprintf(stderr, "Error(%d): %s\nLine: %d\nFile: %s\nC Version: %ld\nDate: %s\n", errno,__func__,__LINE__,__FILE__,__STDC_VERSION__,__DATE__)
 

@@ -31,8 +31,6 @@ int main(int argc, char **argv)
   Chip8.init(&Chip8);
   Chip8.LoadProgram(&Chip8, "IBM_logo");
 
-  //Drawing test
-  Chip8.opcode = 0xD110;
   GameLoop();
 
   CleanUpSDL(g_Window);
@@ -53,7 +51,6 @@ void GameLoop() {
 	  }
 
     HandleInput();
-    DRW(&Chip8);
 
     SDL_Delay(16);
     if(!(Chip8.V[15] & 0)) {
@@ -91,8 +88,8 @@ int initSDL() {
 
   g_rect.w = 8;
   g_rect.h = 8;
-  g_rect.x = 0;
-  g_rect.y = 0;
+  g_rect.x = 50;
+  g_rect.y = 50;
 
   return 0;
 }
@@ -100,8 +97,8 @@ int initSDL() {
 void DrawPixel(SDL_Renderer* a_renderer) {
     SDL_RenderGetViewport(g_renderer, &g_area);
     SDL_SetRenderDrawColor(a_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-    g_rect.x += 1;
-    g_rect.y += 1;
+    //g_rect.x += 1;
+    //g_rect.y += 1;
     SDL_RenderFillRect(a_renderer, &g_rect);
 }
 
@@ -128,15 +125,7 @@ void GoLeft(SDL_Renderer* a_renderer) {
 }
 
 void GoUp(SDL_Renderer* a_renderer) {
-    SDL_RenderGetViewport(g_renderer, &g_area);
-    SDL_SetRenderDrawColor(a_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-    g_rect.y -= 1;
-    if (g_rect.y - 1 < 0) {
-      g_rect.y = 127;
-    } else {
-      g_rect.y -= 1;
-    }
-    SDL_RenderFillRect(a_renderer, &g_rect);
+    DRW(&Chip8);
 }
 
 void GoDown(SDL_Renderer* a_renderer) {
