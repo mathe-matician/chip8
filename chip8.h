@@ -8,6 +8,10 @@
 #define REG_SIZE 16
 #define SCREEN_HEIGHT 64
 #define SCREEN_WIDTH 128
+#define NEXT_PIXEL_LINE 28
+#define BYTE 8
+#define BIT7 0x80
+#define WHITE 0xFF
 #define ERROR_MSG\
   fprintf(stderr, "Error(%d): %s\nLine: %d\nFile: %s\nC Version: %ld\nDate: %s\n", errno,__func__,__LINE__,__FILE__,__STDC_VERSION__,__DATE__)
 

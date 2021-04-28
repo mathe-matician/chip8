@@ -1,7 +1,5 @@
 CC=gcc
-CFLAGS= -Wall
-#INCLUDES= -I ./include
-#LFLAGS= -L ./lib
+CFLAGS= -Wall -g
 LIBS= -lSDL2
 SRC=main.c chip8defs.c opcodes.c
 OUTPUT=-o chip8

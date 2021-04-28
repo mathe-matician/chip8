@@ -147,41 +147,53 @@ void RND(CHIP8_t* a_chip8) {
 void DRW(CHIP8_t* a_chip8) {
     uint8_t l_how_many_bytes = Get_000x(a_chip8->opcode);
     uint16_t l_memoryLocation = a_chip8->I;
+    //int l_xPosition = a_chip8->V[Get_0x00(a_chip8->opcode)];
+    //int l_yPosition = a_chip8->V[Get_00x0(a_chip8->opcode)];
+    //above causes seg fault
     int l_xPosition = Get_0x00(a_chip8->opcode);
     int l_yPosition = Get_00x0(a_chip8->opcode);
-    printf("how many = %d\n", l_how_many_bytes);
 
-    //read n bytes starting at location I
-    while ((int*)l_how_many_bytes--) {
-        uint8_t l_mem_byte = a_chip8->memory[l_memoryLocation];
-        
-        //Collision
-        //XOR Vx,Vy with screen x,y, 
-        //if any pixels are erased by this above XOR, run for collision flag:
-        uint32_t *pixels = (uint32_t*)g_surface->pixels;
-        uint32_t data = pixels[(l_yPosition * g_surface->w) + l_xPosition];
+    int test = 0;
+    uint8_t l_mem_byte = 0;
+    uint8_t l_mask = 0;
+    uint32_t *l_pixels = (uint32_t*)g_surface->pixels;
+    uint32_t l_data = 0;
+    int l_yPosition_temp = l_yPosition;
+    int l_xPosition_temp = l_xPosition;
 
-        //temp collision test
-        if (data) {
-            printf("YOU HIT A PIXEL");
-            a_chip8->V[0x0F] = 0x01;
-        } else {
-            a_chip8->V[0x0F] = 0;
+    while (l_how_many_bytes--) {
+        l_mem_byte = a_chip8->memory[test++];
+        l_mask = BIT7;
+
+        for (int i = 0; i < BYTE; i++) {
+            if (l_mem_byte & l_mask) {
+                l_data = l_pixels[(l_yPosition_temp * g_surface->w) + l_xPosition_temp];
+                if (l_data) {
+                    printf("YOU HIT A PIXEL");
+                    a_chip8->V[0x0F] = 0x01;
+                } else {
+                    a_chip8->V[0x0F] = 0;
+                }
+
+                if (l_xPosition_temp > SCREEN_WIDTH-1) {
+                    l_xPosition_temp -= SCREEN_WIDTH+1;
+                }
+
+                if (l_yPosition_temp > SCREEN_HEIGHT-1) {
+                    l_yPosition_temp -= SCREEN_HEIGHT+1;
+                }
+
+                SDL_SetRenderDrawColor(g_renderer, WHITE, WHITE, WHITE, WHITE);
+                SDL_RenderDrawPoint(g_renderer, l_xPosition_temp++, l_yPosition_temp);
+                SDL_RenderPresent(g_renderer);
+
+                l_mask = l_mask >> 1;
+            }
+            l_xPosition_temp++;
+            l_mask = l_mask >> 1;
         }
-
-        //Figure out drawing location
-        //test for drawing screen location and screen boundaries
-        if (l_xPosition > SCREEN_WIDTH-1) {
-            l_xPosition -= SCREEN_WIDTH+1;
-        }
-
-        if (l_yPosition > SCREEN_HEIGHT-1) {
-            l_yPosition -= SCREEN_HEIGHT+1;
-        }
-
-        SDL_SetRenderDrawColor(g_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-        SDL_RenderDrawPoint(g_renderer, l_xPosition, l_yPosition);
-        SDL_RenderPresent(g_renderer);
+        l_xPosition_temp = l_xPosition;
+        l_yPosition_temp++;
     }
 }
 
