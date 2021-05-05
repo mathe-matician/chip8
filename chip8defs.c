@@ -101,10 +101,8 @@ void initSystemImp(CHIP8_t* a_chip8) {
     a_chip8->font = fontset;
     a_chip8->opcode = 0x0000;
     a_chip8->sp = 0;
-    a_chip8->V[1] = 0x80; //drawing test
-    a_chip8->V[2] = 0x80; //drawing test
-    printf("V1 = %d\n", a_chip8->V[1]);
-    printf("V2 = %d\n", a_chip8->V[2]);
+    a_chip8->V[1] = 0x30; //drawing test
+    a_chip8->V[2] = 0x30; //drawing test
     a_chip8->opcode = 0xD125; //drawing test
     a_chip8->I = 0x0000; //drawing test
     a_chip8->memory[0] = fontset[0];//drawing test

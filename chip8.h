@@ -37,7 +37,7 @@ extern uint16_t opcodesInit[OPCODE_SIZE];
 struct stack* stack_head;
 
 typedef struct chip8 {
-    uint8_t memory[MEMORY_SIZE]; //4k of memory
+    uint8_t memory[MEMORY_SIZE]; //4k of memory 0x000 - 0xFFF
     uint8_t gfx[SCREEN_HEIGHT][SCREEN_WIDTH]; //screen size
     uint8_t V[REG_SIZE]; //16 V 8-bit registers
     struct stack* stack_full;

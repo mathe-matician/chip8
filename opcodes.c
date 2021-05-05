@@ -147,13 +147,10 @@ void RND(CHIP8_t* a_chip8) {
 void DRW(CHIP8_t* a_chip8) {
     uint8_t l_how_many_bytes = Get_000x(a_chip8->opcode);
     uint16_t l_memoryLocation = a_chip8->I;
-    //int l_xPosition = a_chip8->V[Get_0x00(a_chip8->opcode)];
-    //int l_yPosition = a_chip8->V[Get_00x0(a_chip8->opcode)];
-    //above causes seg fault
-    int l_xPosition = Get_0x00(a_chip8->opcode);
-    int l_yPosition = Get_00x0(a_chip8->opcode);
 
-    int test = 0;
+    int l_xPosition = a_chip8->V[Get_0x00(a_chip8->opcode)];
+    int l_yPosition = a_chip8->V[Get_00x0(a_chip8->opcode)];
+
     uint8_t l_mem_byte = 0;
     uint8_t l_mask = 0;
     uint32_t *l_pixels = (uint32_t*)g_surface->pixels;
@@ -162,29 +159,35 @@ void DRW(CHIP8_t* a_chip8) {
     int l_xPosition_temp = l_xPosition;
 
     while (l_how_many_bytes--) {
-        l_mem_byte = a_chip8->memory[test++];
+        l_mem_byte = a_chip8->memory[l_memoryLocation++];
         l_mask = BIT7;
 
         for (int i = 0; i < BYTE; i++) {
             if (l_mem_byte & l_mask) {
                 l_data = l_pixels[(l_yPosition_temp * g_surface->w) + l_xPosition_temp];
                 if (l_data) {
-                    printf("YOU HIT A PIXEL");
                     a_chip8->V[0x0F] = 0x01;
                 } else {
+
                     a_chip8->V[0x0F] = 0;
                 }
 
-                if (l_xPosition_temp > SCREEN_WIDTH-1) {
-                    l_xPosition_temp -= SCREEN_WIDTH+1;
+                if (l_xPosition_temp > SCREEN_WIDTH) {
+                    l_xPosition_temp -= SCREEN_WIDTH;
                 }
 
-                if (l_yPosition_temp > SCREEN_HEIGHT-1) {
-                    l_yPosition_temp -= SCREEN_HEIGHT+1;
+                if (l_yPosition_temp > SCREEN_HEIGHT) {
+                    l_yPosition_temp -= SCREEN_HEIGHT;
                 }
 
-                SDL_SetRenderDrawColor(g_renderer, WHITE, WHITE, WHITE, WHITE);
-                SDL_RenderDrawPoint(g_renderer, l_xPosition_temp++, l_yPosition_temp);
+                if (SDL_SetRenderDrawColor(g_renderer, WHITE, WHITE, WHITE, WHITE)) {
+                    ERROR_MSG;
+                    fprintf("SDL Error: %s\n", SDL_GetError());
+                }
+                if (SDL_RenderDrawPoint(g_renderer, l_xPosition_temp++, l_yPosition_temp)) {
+                    ERROR_MSG;
+                    fprintf("SDL Error: %s\n", SDL_GetError());
+                }
                 SDL_RenderPresent(g_renderer);
 
                 l_mask = l_mask >> 1;
@@ -290,75 +293,129 @@ void LD_8xy0(CHIP8_t* a_chip8) {
 //Skip next instruction if key with the value of Vx is pressed.
 //Checks the keyboard, and if the key corresponding to the value of Vx is currently in the down position, PC is increased by 2.
 void SKP(CHIP8_t* a_chip8) {
-    //check keyboard input
+    const uint8_t *state;
+    state = SDL_GetKeyboardState(NULL);
+    int l_val = a_chip8->V[Get_0x00(a_chip8->opcode)];
+    if (state[l_val]) {
+        a_chip8->pc += 2;
+    }
 }
 
 //SKNP Vx ExA1
 //Skip next instruction if key with the value of Vx is not pressed.
 //Checks the keyboard, and if the key corresponding to the value of Vx is currently in the up position, PC is increased by 2.
 void SKNP(CHIP8_t* a_chip8) {
-    printf("SKNP");
+    const uint8_t *state;
+    state = SDL_GetKeyboardState(NULL);
+    int l_val = a_chip8->V[Get_0x00(a_chip8->opcode)];
+    if (!state[l_val]) {
+        a_chip8->pc += 2;
+    }
 }
 
 //LD Vx, [I] Fx65
 //Read registers V0 through Vx from memory starting at location I.
 //The interpreter reads values from memory starting at location I into registers V0 through Vx.
 void LD_Fx65_I(CHIP8_t* a_chip8) {
-    int l_endRegister = Get_0x00(a_chip8->opcode);
-    for (int i = 0; i != l_endRegister; i++) {
-        //a_chip8->memory[]
-        printf("LD\n");
+    int l_endReg = Get_0x00(a_chip8->opcode);
+    uint16_t l_memLoc = a_chip8->I;
+    for (int i = 0; i < l_endReg+1; i++) {
+        a_chip8->V[i] = a_chip8->memory[l_memLoc++];
     }
 }
 
 //LD [I], Vx Fx55
+//Store registers V0 through Vx in memory starting at location I
+//The interpreter copies the values of registers V0 through Vx into memory, starting at the address in I
 void LD_I_Fx55(CHIP8_t* a_chip8) {
-    printf("LD_I_Fx55");
+    int l_endReg = Get_0x00(a_chip8->opcode);
+    uint16_t l_memLoc = a_chip8->I;
+    for (int i = 0; i < l_endReg+1; i++) {
+        a_chip8->memory[l_memLoc++];
+    }
 }
 
 //LD B, Vx Fx33
+//Store BCD representation of Vx in memory locations I, I+1, and I+2.
+//The interpreter takes the decimal value of Vx, and places the hundreds digit in memory at location in I,
+//the tens digit at location I+1, and the ones digit at location I+2.
 void LD_B_Fx33(CHIP8_t* a_chip8) {
-    printf("LD_B_Fx33");
+    int l_Vx = a_chip8->V[Get_0x00(a_chip8->opcode)];
+    uint8_t l_hund = abs(l_Vx / 100);
+    uint8_t l_tens = abs(l_Vx / 10) % 10;
+    uint8_t l_ones = l_Vx % 10;
+
+    a_chip8->I = l_hund;
+    a_chip8->I+1 = l_tens;
+    a_chip8->I+2 = l_ones;
 }
 
 //LD F, Vx Fx29
+//Set I = location of sprite for digit Vx.
+//The value of I is set to the location for the hexadecimal sprite corresponding to the value of Vx.
 void LD_F_Fx29(CHIP8_t* a_chip8) {
-    printf("LD_F_Fx29");
+    //temp
 }
 
 //ADD I, Vx Fx1E
+//Set I = I + Vx.
+//The values of I and Vx are added, and the results are stored in I.
 void ADD_I_Fx1E(CHIP8_t* a_chip8) {
-    printf("ADD_I_Fx1E");
+    a_chip8->I += a_chip8->V[Get_0x00(a_chip8->opcode)];
 }
 
-//LD ST, Vx Fx1E
-void LD_ST_Fx1E(CHIP8_t* a_chip8) {
-    printf("LD_ST_Fx1E");
+//LD ST, Vx Fx18
+//Set sound timer = Vx.
+//ST is set equal to the value of Vx.
+void LD_ST_Fx18(CHIP8_t* a_chip8) {
+    a_chip8->sound_timer = a_chip8->V[Get_0x00(a_chip8->opcode)];
 }
 
 //LD DT, Vx Fx15
+//Set delay timer = Vx.
+//DT is set equal to the value of Vx.
 void LD_DT_Fx15(CHIP8_t* a_chip8) {
-    printf("LD_DT_Fx15");
+    a_chip8->delay_timer = a_chip8->V[Get_0x00(a_chip8->opcode)];
 }
 
 //LD Vx, K Fx0A
+//Wait for a key press, store the value of the key in Vx.
+//All execution stops until a key is pressed, then the value of that key is stored in Vx.
 void LD_K_Fx0A(CHIP8_t* a_chip8) {
-    printf("LD_K_Fx0A");
+    const uint8_t *state;
+    state = SDL_GetKeyboardState(NULL);
+    int l_reg = Get_0x00(a_chip8->opcode);
+    int l_key = a_chip8->V[l_reg];
+    while (1) {
+        if (state[l_key]) {
+            a_chip8->V[l_reg] = l_key;
+            break;
+        }
+    }
 }
 
 //LD Vx, DT Fx07
+//Set Vx = delay timer value.
+//The value of DT is placed into Vx.
 void LD_DT_Fx07(CHIP8_t* a_chip8) {
-    printf("LD_DT_Fx07");
+    a_chip8->V[Get_0x00(a_chip8->opcode)] = a_chip8->delay_timer;
 }
 
-//LD Vx, DT Fx07
+//LD Vx, DT 00E0
 void CLS(CHIP8_t* a_chip8) {
-    printf("CLS");
+    if (SDL_RenderClear(g_renderer)) {
+        ERROR_MSG;
+        fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
+    }
 }
 
-//LD Vx, DT Fx07
+//LD Vx, DT 00EE
+//Return from a subroutine.
+//The interpreter sets the program counter to the address at the top of the stack, then subtracts 1 from the stack pointer.
 void RET(CHIP8_t* a_chip8) {
-    printf("RET");
+    a_chip8->pc = a_chip8->stack_full;
+    //TODO fix pop
+    pop();
 }
 
 //to call: (*opcode_execute[index])()
@@ -366,6 +423,6 @@ void (*opcode_execute[OPCODE_SIZE])() = {
     SYS, JP_1nnn, CALL, SE_3xkk, SNE, SE_5xy0, LD_6xkk, ADD_7xkk,
     LD_I_Annn, JP_V0_Bnnn, RND, DRW, OR, AND, XOR, ADD_8xy4,
     SUB, SHR, SUBN, SHL, LD_8xy0, SKP, SKNP, LD_Fx65_I,
-    LD_I_Fx55, LD_B_Fx33, LD_F_Fx29, ADD_I_Fx1E, LD_ST_Fx1E, LD_DT_Fx15, LD_K_Fx0A, LD_DT_Fx07,
+    LD_I_Fx55, LD_B_Fx33, LD_F_Fx29, ADD_I_Fx1E, LD_ST_Fx18, LD_DT_Fx15, LD_K_Fx0A, LD_DT_Fx07,
     CLS, RET
 };
