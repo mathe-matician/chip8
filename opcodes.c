@@ -182,11 +182,11 @@ void DRW(CHIP8_t* a_chip8) {
 
                 if (SDL_SetRenderDrawColor(g_renderer, WHITE, WHITE, WHITE, WHITE)) {
                     ERROR_MSG;
-                    fprintf("SDL Error: %s\n", SDL_GetError());
+                    fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
                 }
                 if (SDL_RenderDrawPoint(g_renderer, l_xPosition_temp++, l_yPosition_temp)) {
                     ERROR_MSG;
-                    fprintf("SDL Error: %s\n", SDL_GetError());
+                    fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
                 }
                 SDL_RenderPresent(g_renderer);
 
@@ -331,7 +331,7 @@ void LD_I_Fx55(CHIP8_t* a_chip8) {
     int l_endReg = Get_0x00(a_chip8->opcode);
     uint16_t l_memLoc = a_chip8->I;
     for (int i = 0; i < l_endReg+1; i++) {
-        a_chip8->memory[l_memLoc++];
+        a_chip8->memory[l_memLoc++] = a_chip8->V[i];
     }
 }
 
@@ -340,14 +340,14 @@ void LD_I_Fx55(CHIP8_t* a_chip8) {
 //The interpreter takes the decimal value of Vx, and places the hundreds digit in memory at location in I,
 //the tens digit at location I+1, and the ones digit at location I+2.
 void LD_B_Fx33(CHIP8_t* a_chip8) {
-    int l_Vx = a_chip8->V[Get_0x00(a_chip8->opcode)];
-    uint8_t l_hund = abs(l_Vx / 100);
-    uint8_t l_tens = abs(l_Vx / 10) % 10;
-    uint8_t l_ones = l_Vx % 10;
+    uint16_t l_Vx = a_chip8->V[Get_0x00(a_chip8->opcode)];
+    uint16_t l_hund = abs(l_Vx / 100);
+    uint16_t l_tens = abs(l_Vx / 10) % 10;
+    uint16_t l_ones = l_Vx % 10;
 
-    a_chip8->I = l_hund;
-    a_chip8->I+1 = l_tens;
-    a_chip8->I+2 = l_ones;
+    a_chip8->memory[a_chip8->I] = l_hund;
+    a_chip8->memory[a_chip8->I+1] = l_tens;
+    a_chip8->memory[a_chip8->I+2] = l_ones;
 }
 
 //LD F, Vx Fx29
@@ -413,7 +413,7 @@ void CLS(CHIP8_t* a_chip8) {
 //Return from a subroutine.
 //The interpreter sets the program counter to the address at the top of the stack, then subtracts 1 from the stack pointer.
 void RET(CHIP8_t* a_chip8) {
-    a_chip8->pc = a_chip8->stack_full;
+    a_chip8->pc = a_chip8->stack_full->address;
     //TODO fix pop
     pop();
 }
