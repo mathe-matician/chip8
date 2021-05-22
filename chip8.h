@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <errno.h>
+#define STACK_ADDR 97 // stack size = [97] - [81]. 16 8bit areas
 #define OPCODE_SIZE 35
 #define MEMORY_SIZE 0x0FFF
 #define REG_SIZE 16
@@ -12,6 +13,7 @@
 #define BYTE 8
 #define BIT7 0x80
 #define WHITE 0xFF
+#define KEYSIZE 16
 #define ERROR_MSG\
   fprintf(stderr, "Error(%d): %s\nLine: %d\nFile: %s\nC Version: %ld\nDate: %s\n", errno,__func__,__LINE__,__FILE__,__STDC_VERSION__,__DATE__)
 
@@ -27,29 +29,21 @@ struct opCode {
     uint16_t opcode;
 };
 
-struct stack {
-    uint16_t address;
-    struct stack* next;
-};
-
 struct opCode* opcode_hash[OPCODE_SIZE];
 extern uint16_t opcodesInit[OPCODE_SIZE];
-struct stack* stack_head;
+uint8_t* sp;
+uint16_t pc;
 
 typedef struct chip8 {
     uint8_t memory[MEMORY_SIZE]; //4k of memory 0x000 - 0xFFF
     uint8_t gfx[SCREEN_HEIGHT][SCREEN_WIDTH]; //screen size
     uint8_t V[REG_SIZE]; //16 V 8-bit registers
-    struct stack* stack_full;
-    uint16_t sp; //stack pointer
-    uint16_t opcode; //16bit opcode variable
+    uint16_t opcode; //16bit opcode
     void (*opcode_execute[OPCODE_SIZE])(struct chip8* a_chip8); //function pointer to the opcode to execute
     uint16_t I; //Index register
-    uint16_t pc; //program counter
     uint8_t delay_timer; //60hz timer
     uint8_t sound_timer; //60hz timer
     uint8_t key[REG_SIZE]; //CHIP8 has a hex keypad 0 - F
-    const unsigned char* font;
     emulateCycle EmulateCycle; //fetch, decode, execute
     initSystem init; //init memory
     loadProgram LoadProgram;
@@ -62,13 +56,10 @@ extern void emulateCycleImp(struct chip8* a_chip8);
 extern void initSystemImp(struct chip8* a_chip8);
 extern void loadProgramImp(struct chip8* a_chip8, char* a_program);
 extern void setKeysImp(struct chip8* a_chip8);
+extern void getKey(struct chip8* a_chip8, uint8_t* state);
 
 //opcode hashtable
 extern void init_hash();
-
-//stack
-extern struct stack* push(uint16_t a_address);
-extern void pop();
 
 extern void DRW(CHIP8_t* a_chip8);
 
