@@ -48,9 +48,15 @@ void GameLoop() {
 		  if(g_event.type == SDL_QUIT){
 			  running=0;
 		  }
+      //SDL_KeyboardEvent.keysym.scancode
+      //if (g_event.type == SDL_KeyboardEvent.keysym.scancode) {
+      //  printf("TEST A KEY WAS PRESSED!\n");
+      //}
 	  }
 
     HandleInput();
+
+    //Chip8.EmulateCycle();
 
     SDL_Delay(16);
     if(!(Chip8.V[15] & 0)) {

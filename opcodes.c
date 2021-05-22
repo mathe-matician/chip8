@@ -49,6 +49,7 @@ uint16_t Get_000x(uint16_t a_opcode) {
 //0x0nnn: Jump to a machine code routine at nnn.
 //This instruction is only used on the old computers on which Chip-8 was originally implemented. It is ignored by modern interpreters.
 void SYS() {
+    //TODO make error handling for this opcode
     printf("SYS not implemented");
 }
 
@@ -56,15 +57,15 @@ void SYS() {
 //The interpreter sets the program counter to nnn.
 void JP_1nnn(CHIP8_t* a_chip8) {
     uint16_t l_address = Get_0xxx(a_chip8->opcode);
-    a_chip8->pc = l_address;
+    pc = l_address;
 }
 
 //2nnn: Call subroutine at nnn.
 //The interpreter increments the stack pointer, then puts the current PC on the top of the stack. The PC is then set to nnn.
 void CALL(CHIP8_t* a_chip8) {
-    a_chip8->sp++;
-    a_chip8->stack_full = push(a_chip8->pc);
-    a_chip8->pc = Get_0xxx(a_chip8->opcode);
+    sp--; //stack grows down
+    a_chip8->memory[STACK_ADDR] = pc;
+    pc = Get_0xxx(a_chip8->opcode);
 }
 
 //TODO: make sure this is correct with memory fetching
@@ -72,7 +73,7 @@ void CALL(CHIP8_t* a_chip8) {
 //The interpreter compares register Vx to kk, and if they are equal, increments the program counter by 2.
 void SE_3xkk(CHIP8_t* a_chip8) {
     if (a_chip8->V[Get_0x00(a_chip8->opcode)] == a_chip8->memory[Get_00xx(a_chip8->opcode)]) {
-        a_chip8->pc+=0x0002;
+        pc += 2;
     }
 }
 //SNE Vx, byte 4xkk
@@ -80,7 +81,7 @@ void SE_3xkk(CHIP8_t* a_chip8) {
 //The interpreter compares register Vx to kk, and if they are not equal, increments the program counter by 2.
 void SNE(CHIP8_t* a_chip8) {
     if (a_chip8->V[Get_0x00(a_chip8->opcode)] != Get_00xx(a_chip8->opcode)) {
-        a_chip8->pc+=0x0002;
+        pc += 2;
     }
 }
 
@@ -89,7 +90,7 @@ void SNE(CHIP8_t* a_chip8) {
 //The interpreter compares register Vx to register Vy, and if they are equal, increments the program counter by 2.
 void SE_5xy0(CHIP8_t* a_chip8) {
     if (a_chip8->V[Get_0x00(a_chip8->opcode)] == a_chip8->V[Get_00x0(a_chip8->opcode)]) {
-        a_chip8->pc+=0x0002;
+        pc += 2;
     }
 }
 
@@ -118,7 +119,7 @@ void LD_I_Annn(CHIP8_t* a_chip8) {
 //Jump to location nnn + V0.
 //The program counter is set to nnn plus the value of V0.
 void JP_V0_Bnnn(CHIP8_t* a_chip8) {
-    a_chip8->pc = Get_0xxx(a_chip8->opcode);
+    pc = Get_0xxx(a_chip8->opcode);
 }
 
 
@@ -297,7 +298,7 @@ void SKP(CHIP8_t* a_chip8) {
     state = SDL_GetKeyboardState(NULL);
     int l_val = a_chip8->V[Get_0x00(a_chip8->opcode)];
     if (state[l_val]) {
-        a_chip8->pc += 2;
+        pc += 2;
     }
 }
 
@@ -309,7 +310,7 @@ void SKNP(CHIP8_t* a_chip8) {
     state = SDL_GetKeyboardState(NULL);
     int l_val = a_chip8->V[Get_0x00(a_chip8->opcode)];
     if (!state[l_val]) {
-        a_chip8->pc += 2;
+        pc += 2;
     }
 }
 
@@ -353,8 +354,14 @@ void LD_B_Fx33(CHIP8_t* a_chip8) {
 //LD F, Vx Fx29
 //Set I = location of sprite for digit Vx.
 //The value of I is set to the location for the hexadecimal sprite corresponding to the value of Vx.
+//The index register I is set to the address of the hexadecimal character in VX. 
+//You probably stored that font somewhere in the first 512 bytes of memory, so now you just need to point I to the right character.
+//An 8-bit register can hold two hexadecimal numbers, but this would only point to one character. 
+//The original COSMAC VIP interpreter just took the last nibble of VX and used that as the character.
 void LD_F_Fx29(CHIP8_t* a_chip8) {
-    //temp
+    uint16_t l_hexNum = a_chip8->V[Get_0x00(a_chip8->opcode)];
+    uint16_t memLoc = 0x200 + (l_hexNum * 5);
+    a_chip8->I = memLoc;
 }
 
 //ADD I, Vx Fx1E
@@ -412,10 +419,9 @@ void CLS(CHIP8_t* a_chip8) {
 //LD Vx, DT 00EE
 //Return from a subroutine.
 //The interpreter sets the program counter to the address at the top of the stack, then subtracts 1 from the stack pointer.
-void RET(CHIP8_t* a_chip8) {
-    a_chip8->pc = a_chip8->stack_full->address;
-    //TODO fix pop
-    pop();
+void RET() {
+    pc = *sp;
+    sp--;
 }
 
 //to call: (*opcode_execute[index])()
