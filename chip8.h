@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <errno.h>
 #define STACK_ADDR 97 // stack size = [97] - [81]. 16 8bit areas
-#define OPCODE_SIZE 35
+#define OPCODE_SIZE 34
 #define MEMORY_SIZE 0x0FFF
 #define REG_SIZE 16
 #define SCREEN_HEIGHT 64
@@ -62,5 +62,12 @@ extern void getKey(struct chip8* a_chip8, uint8_t* state);
 extern void init_hash();
 
 extern void DRW(CHIP8_t* a_chip8);
+
+extern uint16_t Get_0xxx(uint16_t a_opcode);
+extern uint16_t Get_0xx0(uint16_t a_opcode);
+extern uint16_t Get_0x00(uint16_t a_opcode);
+extern uint16_t Get_00xx(uint16_t a_opcode);
+extern uint16_t Get_00x0(uint16_t a_opcode);
+extern uint16_t Get_000x(uint16_t a_opcode);
 
 #endif //CHIP8_H

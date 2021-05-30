@@ -12,6 +12,18 @@ uint16_t opcodesInit[OPCODE_SIZE] = {
     0x00E0, 0x00EE
 };
 
+//to call: (*opcode_execute[index])()
+void (*opcode_execute[OPCODE_SIZE])() = {
+    SYS, SHR, SUBN, LD_Fx65_I, DRW, ADD_I_Fx1E, JP_V0_Bnnn, SHL, SKP,
+    LD_F_Fx29, ADD_7xkk, SKNP, SE_5xy0, LD_ST_Fx18, SE_3xkk, LD_K_Fx0A, JP_1nnn,
+    LD_DT_Fx07, RET, LD_I_Fx55, LD_B_Fx33, CLS, RND, LD_DT_Fx15, LD_I_Annn,
+    test, LD_8xy0, OR, LD_6xkk, AND, SNE, XOR, CALL, ADD_8xy4, SUB
+};
+
+void test() {
+
+}
+
 //AND uint16_t with 0x0FFF;
 uint16_t Get_0xxx(uint16_t a_opcode) {
     return a_opcode & 0x0FFF;
@@ -54,12 +66,8 @@ void SYS() {
 }
 
 //0x1nnn: Jump to location nnn.
-//The interpreter sets the program counter to nnn.
-void JP_1nnn(CHIP8_t* a_chip8) {
-    uint16_t l_address = Get_0xxx(a_chip8->opcode);
-    pc = l_address;
-}
-
+//The interpreter sets the program counter to nnn    CALL, SNE,  
+     XOR, ADD_8xy4,
 //2nnn: Call subroutine at nnn.
 //The interpreter increments the stack pointer, then puts the current PC on the top of the stack. The PC is then set to nnn.
 void CALL(CHIP8_t* a_chip8) {

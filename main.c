@@ -29,7 +29,9 @@ int main(int argc, char **argv)
   Chip8.init = initSystemImp;
 
   Chip8.init(&Chip8);
-  Chip8.LoadProgram(&Chip8, "IBM_logo");
+  printf("MEMS = %#06x\n", Chip8.memory[pc]);
+  printf("MEMS = %#06x\n", Chip8.memory[pc+1]);
+  //Chip8.LoadProgram(&Chip8, "IBM_logo");
 
   GameLoop();
 
@@ -42,7 +44,8 @@ void GameLoop() {
   int running = 1;
   while(running)
   {
-    //Chip8.EmulateCycle(&Chip8);
+    Chip8.EmulateCycle(&Chip8);
+
     //consume events
 	  while(SDL_PollEvent(&g_event)){
 		  if(g_event.type == SDL_QUIT){
@@ -55,8 +58,6 @@ void GameLoop() {
 	  }
 
     HandleInput();
-
-    //Chip8.EmulateCycle();
 
     SDL_Delay(16);
     if(!(Chip8.V[15] & 0)) {
