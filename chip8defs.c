@@ -78,7 +78,7 @@ uint16_t Decode(uint16_t a_opcode) {
     //figure out what opcode it is and error if not in hash table.
     uint16_t test = hash_code(l_code);
     printf("test = %#06x\n", test);
-    return test
+    return test;
     /*struct opCode* l_temp = opcode_hash[test];
     printf("l_temp->opcode = %#06x\n", l_temp->opcode);
     uint16_t l_opcode = l_temp->opcode;
@@ -101,7 +101,7 @@ void emulateCycleImp(CHIP8_t* a_chip8) {
     uint16_t l_decodedOpcode = Decode(l_opcode);
     printf("int v: %d\n", l_decodedOpcode);
     //execute
-    a_chip8->opcode_execute[l_decodedOpcode](a_chip8);
+    execute_opcode(l_decodedOpcode, a_chip8);
 }
 
 void initSystemImp(CHIP8_t* a_chip8) {
