@@ -35,27 +35,26 @@ const unsigned int g_keys[KEYSIZE] = {
 
 const unsigned int* g_keys_p = g_keys;
 
-//Store fontset in memory locations 0x000 - 0x080
+//Store fontset in memory locations 0x000 - 0x079
 void init_font(CHIP8_t* a_chip8) {
     uint16_t memFont = 0x0000;
-    for (int i = 0; i < 80; i ++) {
+    for (int i = 0; i < 80; i++) {
         a_chip8->memory[memFont++] = fontset[i];
     }
 }
-
-int hash_code(uint16_t a_opcode) {
+uint16_t hash_code(uint16_t a_opcode) {
    return a_opcode % OPCODE_SIZE;
 }
 
-//clean up for opcodes?
 //automatic reference counter for freeing memory?
 void insert(uint16_t a_opcode) {
-    int l_opcodeIndex = hash_code(a_opcode);
     struct opCode* l_opcodeStruct = (struct opCode*)malloc(sizeof(struct opCode));
     l_opcodeStruct->opcode = a_opcode;
+    uint16_t l_opcodeIndex = hash_code(a_opcode);
     while(opcode_hash[l_opcodeIndex] != NULL) {
-        ++l_opcodeIndex;
-        l_opcodeIndex %= OPCODE_SIZE;
+        if (l_opcodeIndex++ > OPCODE_SIZE) {
+            l_opcodeIndex = 0;
+        }
     }
     opcode_hash[l_opcodeIndex] = l_opcodeStruct;
 }
@@ -66,41 +65,26 @@ void init_hash() {
     }
 }
 
-int Execute(uint16_t a_opcode) {
-    printf("Execute");
-    return 0;
+void Execute(uint16_t a_opcode) {
+
 }
 
 uint16_t Decode(uint16_t a_opcode) {
-    int l_code = a_opcode & 0xF0FF;
-    //figure out what opcode it is and error if not in hash table.
-    int test = hash_code(l_code);
-    struct opCode* l_temp = opcode_hash[test];
-    uint16_t l_opcode = l_temp->opcode;
-    if (!l_opcode) {
-        ERROR_MSG;
-        fprintf(stderr, "Error: Not a valid opcode.\n");
-        return -1;
-    }
-    //TODO: Parse the opcode for particulars.
-    return l_opcode;
+    uint16_t l_tempcode = a_opcode & 0xF000;
+    uint16_t l_code = hash_code(l_tempcode);
+    return l_code;
 }
 
-//TODO: change memory to 16bit address
 void emulateCycleImp(CHIP8_t* a_chip8) {
     //fetch
-    uint8_t l_msb = a_chip8->memory[pc];
-    uint8_t l_lsb = a_chip8->memory[pc + 1];
+    uint16_t l_msb = a_chip8->memory[pc] << 8;
+    uint16_t l_lsb = a_chip8->memory[pc+1];
     //decode
-    a_chip8->opcode = l_msb << 8 | l_lsb;
-    uint16_t l_decodedOpcode = Decode(a_chip8->opcode);
-    if (l_decodedOpcode) {
-        ERROR_MSG;
-        fprintf(stderr, "Error: There was an error decoding the opcode");
-        return;
-    }
+    uint16_t l_opcode = l_msb | l_lsb;
+    uint16_t l_decodedOpcode = Decode(l_opcode);
+    a_chip8->opcode = l_opcode;
     //execute
-    a_chip8->opcode_execute[l_decodedOpcode](a_chip8);
+    execute_opcode(l_decodedOpcode, a_chip8);
 }
 
 void initSystemImp(CHIP8_t* a_chip8) {
@@ -111,10 +95,13 @@ void initSystemImp(CHIP8_t* a_chip8) {
     a_chip8->delay_timer = 0;
     a_chip8->sound_timer = 0;
     init_font(a_chip8);
+
+    a_chip8->memory[0x200] = 0xD1; //fetch test
+    a_chip8->memory[0x201] = 0x25; //fetch test
+
     a_chip8->V[1] = 0x30; //drawing test
     a_chip8->V[2] = 0x30; //drawing test
-    a_chip8->opcode = 0xD125; //drawing test
-    a_chip8->I = 0x0000; //drawing test
+    a_chip8->I = 0x0008; //drawing test
 }
 
 void loadProgramImp(CHIP8_t* a_chip8, char* a_program) {

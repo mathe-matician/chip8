@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <errno.h>
 #define STACK_ADDR 97 // stack size = [97] - [81]. 16 8bit areas
-#define OPCODE_SIZE 35
+#define OPCODE_SIZE 34
 #define MEMORY_SIZE 0x0FFF
 #define REG_SIZE 16
 #define SCREEN_HEIGHT 64
@@ -23,7 +23,6 @@ typedef void (*initSystem)();
 typedef void (*loadProgram)();
 typedef void (*setKeys)();
 typedef void (*executeOpcode)();
-extern void (*opcode_execute[OPCODE_SIZE])();
 
 struct opCode {
     uint16_t opcode;
@@ -36,10 +35,8 @@ uint16_t pc;
 
 typedef struct chip8 {
     uint8_t memory[MEMORY_SIZE]; //4k of memory 0x000 - 0xFFF
-    uint8_t gfx[SCREEN_HEIGHT][SCREEN_WIDTH]; //screen size
     uint8_t V[REG_SIZE]; //16 V 8-bit registers
     uint16_t opcode; //16bit opcode
-    void (*opcode_execute[OPCODE_SIZE])(struct chip8* a_chip8); //function pointer to the opcode to execute
     uint16_t I; //Index register
     uint8_t delay_timer; //60hz timer
     uint8_t sound_timer; //60hz timer
@@ -58,9 +55,14 @@ extern void loadProgramImp(struct chip8* a_chip8, char* a_program);
 extern void setKeysImp(struct chip8* a_chip8);
 extern void getKey(struct chip8* a_chip8, uint8_t* state);
 
-//opcode hashtable
+extern void execute_opcode(int a_index, struct chip8* a_chip8);
 extern void init_hash();
 
-extern void DRW(CHIP8_t* a_chip8);
+extern uint16_t Get_0xxx(uint16_t a_opcode);
+extern uint16_t Get_0xx0(uint16_t a_opcode);
+extern uint16_t Get_0x00(uint16_t a_opcode);
+extern uint16_t Get_00xx(uint16_t a_opcode);
+extern uint16_t Get_00x0(uint16_t a_opcode);
+extern uint16_t Get_000x(uint16_t a_opcode);
 
 #endif //CHIP8_H
