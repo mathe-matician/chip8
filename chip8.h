@@ -35,10 +35,8 @@ uint16_t pc;
 
 typedef struct chip8 {
     uint8_t memory[MEMORY_SIZE]; //4k of memory 0x000 - 0xFFF
-    uint8_t gfx[SCREEN_HEIGHT][SCREEN_WIDTH]; //screen size
     uint8_t V[REG_SIZE]; //16 V 8-bit registers
     uint16_t opcode; //16bit opcode
-    //void (*opcode_E[35])(struct chip8* a_chip8); //jump table for the opcode to execute
     uint16_t I; //Index register
     uint8_t delay_timer; //60hz timer
     uint8_t sound_timer; //60hz timer
@@ -58,12 +56,7 @@ extern void setKeysImp(struct chip8* a_chip8);
 extern void getKey(struct chip8* a_chip8, uint8_t* state);
 
 extern void execute_opcode(int a_index, struct chip8* a_chip8);
-//extern void (*opcode_execute)(struct chip8* a_chip8);
-
-//opcode hashtable
 extern void init_hash();
-
-extern void DRW(CHIP8_t* a_chip8);
 
 extern uint16_t Get_0xxx(uint16_t a_opcode);
 extern uint16_t Get_0xx0(uint16_t a_opcode);

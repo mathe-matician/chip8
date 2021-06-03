@@ -132,7 +132,6 @@ void GoLeft(SDL_Renderer* a_renderer) {
 }
 
 void GoUp(SDL_Renderer* a_renderer) {
-    DRW(&Chip8);
 }
 
 void GoDown(SDL_Renderer* a_renderer) {

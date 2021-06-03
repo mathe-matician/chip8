@@ -55,9 +55,7 @@ void insert(uint16_t a_opcode) {
         if (l_opcodeIndex++ > OPCODE_SIZE) {
             l_opcodeIndex = 0;
         }
-        l_opcodeIndex % OPCODE_SIZE;
     }
-    printf("Inserting: %#06x as %d\n", a_opcode, l_opcodeIndex);
     opcode_hash[l_opcodeIndex] = l_opcodeStruct;
 }
 
@@ -72,24 +70,9 @@ void Execute(uint16_t a_opcode) {
 }
 
 uint16_t Decode(uint16_t a_opcode) {
-    printf("a_opcode = %#06x\n", a_opcode);
-    uint16_t l_code = a_opcode & 0xF000;
-    printf("l_code = %#06x\n", l_code);
-    //figure out what opcode it is and error if not in hash table.
-    uint16_t test = hash_code(l_code);
-    printf("test = %#06x\n", test);
-    return test;
-    /*struct opCode* l_temp = opcode_hash[test];
-    printf("l_temp->opcode = %#06x\n", l_temp->opcode);
-    uint16_t l_opcode = l_temp->opcode;
-    printf("l_opcode = %#06x\n", l_opcode);
-    if (!l_opcode) {
-        ERROR_MSG;
-        fprintf(stderr, "Error: Not a valid opcode.\n");
-        return -1;
-    }
-    //TODO: Parse the opcode for particulars.
-    return l_opcode;*/
+    uint16_t l_tempcode = a_opcode & 0xF000;
+    uint16_t l_code = hash_code(l_tempcode);
+    return l_code;
 }
 
 void emulateCycleImp(CHIP8_t* a_chip8) {
@@ -99,7 +82,7 @@ void emulateCycleImp(CHIP8_t* a_chip8) {
     //decode
     uint16_t l_opcode = l_msb | l_lsb;
     uint16_t l_decodedOpcode = Decode(l_opcode);
-    printf("int v: %d\n", l_decodedOpcode);
+    a_chip8->opcode = l_opcode;
     //execute
     execute_opcode(l_decodedOpcode, a_chip8);
 }
@@ -118,7 +101,7 @@ void initSystemImp(CHIP8_t* a_chip8) {
 
     a_chip8->V[1] = 0x30; //drawing test
     a_chip8->V[2] = 0x30; //drawing test
-    a_chip8->I = 0x0000; //drawing test
+    a_chip8->I = 0x0008; //drawing test
 }
 
 void loadProgramImp(CHIP8_t* a_chip8, char* a_program) {
