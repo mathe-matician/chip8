@@ -17,6 +17,11 @@ void HandleInput();
 
 int main(int argc, char **argv) 
 {
+  if (argc < 2) {
+    fprintf(stderr, "Error: No program specified.\n");
+    return -1;
+  }
+
   if (initSDL()) {
     ERROR_MSG;
     return -1;
@@ -29,9 +34,8 @@ int main(int argc, char **argv)
   Chip8.init = initSystemImp;
 
   Chip8.init(&Chip8);
-  printf("MEMS = %#06x\n", Chip8.memory[pc]);
-  printf("MEMS = %#06x\n", Chip8.memory[pc+1]);
-  //Chip8.LoadProgram(&Chip8, "IBM_logo");
+
+  Chip8.LoadProgram(&Chip8, argv[1]);
 
   GameLoop();
 

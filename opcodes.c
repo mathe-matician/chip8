@@ -49,8 +49,7 @@ uint16_t Get_000x(uint16_t a_opcode) {
 //0x0nnn: Jump to a machine code routine at nnn.
 //This instruction is only used on the old computers on which Chip-8 was originally implemented. It is ignored by modern interpreters.
 void SYS() {
-    //TODO make error handling for this opcode
-    printf("SYS not implemented");
+    printf("SYS not implemented\n");
 }
 
 //0x1nnn: Jump to location nnn.

@@ -79,6 +79,7 @@ void emulateCycleImp(CHIP8_t* a_chip8) {
     //fetch
     uint16_t l_msb = a_chip8->memory[pc] << 8;
     uint16_t l_lsb = a_chip8->memory[pc+1];
+    pc += 2;
     //decode
     uint16_t l_opcode = l_msb | l_lsb;
     uint16_t l_decodedOpcode = Decode(l_opcode);
@@ -95,21 +96,37 @@ void initSystemImp(CHIP8_t* a_chip8) {
     a_chip8->delay_timer = 0;
     a_chip8->sound_timer = 0;
     init_font(a_chip8);
+    a_chip8->I = 0;
+}
 
-    a_chip8->memory[0x200] = 0xD1; //fetch test
-    a_chip8->memory[0x201] = 0x25; //fetch test
+void getProgram(CHIP8_t* a_chip8, const char* a_program) {
+    FILE* l_fp = fopen(a_program, "rb");
+    if (!l_fp) {
+        ERROR_MSG;
+        fprintf(stderr, "File failed to open: Errno (%d)\n", errno);
+    }
 
-    a_chip8->V[1] = 0x30; //drawing test
-    a_chip8->V[2] = 0x30; //drawing test
-    a_chip8->I = 0x0008; //drawing test
+    fseek(l_fp, 0L, SEEK_END);
+    int l_file_size = ftell(l_fp);
+    rewind(l_fp);
+
+    unsigned char l_buffer[l_file_size];
+
+    fread(l_buffer, sizeof(l_buffer), sizeof(*l_buffer), l_fp);
+    fclose(l_fp);
+
+    unsigned char* l_buffer_p = l_buffer;
+    int l_prog_start = 0x200;
+    while (l_buffer_p && l_prog_start != MEMORY_SIZE+1) {
+        a_chip8->memory[l_prog_start] = *l_buffer_p;
+        l_prog_start++;
+        l_buffer_p++;
+    }
 }
 
 void loadProgramImp(CHIP8_t* a_chip8, char* a_program) {
     printf("Loading %s\n", a_program);
-    uint16_t l_programStart = 0x0200;
-    while (a_program++ && l_programStart != MEMORY_SIZE+1) {
-        a_chip8->memory[l_programStart++] = *a_program;
-    }
+    getProgram(a_chip8, a_program);
 }
 
 void setKeysImp(CHIP8_t* a_chip8) {
